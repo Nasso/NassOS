@@ -2,7 +2,7 @@
 tArgs = { ... }
 backgroundColor = colors.white
 textColor = colors.blue
-site = "http://www.nasso.url.ph/fichiers/computerCraft/NassOS/"
+site = "https://raw.githubusercontent.com/Nasso/NassOS/master/"
 
 --Load Nass API
 os.loadAPI("NassOS/nass")
