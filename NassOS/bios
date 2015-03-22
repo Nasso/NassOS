@@ -1,0 +1,238 @@
+--
+--you must download this paste as bios for work !!!
+--
+
+--Variables
+backgroundColor = colors.blue
+textColor = colors.white
+isColorsReversed = false
+isNassOSInstalled = fs.exists("nassOS")
+
+--Functions
+function centerPrint(str)
+	local _, yPos = term.getCursorPos()
+	local xSize = term.getSize()
+	
+	term.setCursorPos((xSize/2)-(string.len(str)/2), yPos)
+	xStartPos, yStartPos = term.getCursorPos()
+	print(str)
+	return xStartPos, yStartPos
+end
+
+function centerWrite(str)
+	local _, yPos = term.getCursorPos()
+	local xSize = term.getSize()
+	
+	term.setCursorPos((xSize/2)-(string.len(str)/2), yPos)
+	xStartPos, yStartPos = term.getCursorPos()
+	write(str)
+	return xStartPos, yStartPos
+end
+
+function centerSlowPrint(str)
+	local _, yPos = term.getCursorPos()
+	local xSize = term.getSize()
+	
+	term.setCursorPos((xSize/2)-(string.len(str)/2), yPos)
+	xStartPos, yStartPos = term.getCursorPos()
+	textutils.slowPrint(str)
+	return xStartPos, yStartPos
+end
+
+function centerSlowWrite(str)
+	local _, yPos = term.getCursorPos()
+	local xSize = term.getSize()
+	
+	term.setCursorPos((xSize/2)-(string.len(str)/2), yPos)
+	xStartPos, yStartPos = term.getCursorPos()
+	textutils.slowWrite(str)
+	return xStartPos, yStartPos
+end
+
+function centerSlowPrint(str, temps)
+	local _, yPos = term.getCursorPos()
+	local xSize = term.getSize()
+	
+	term.setCursorPos((xSize/2)-(string.len(str)/2), yPos)
+	xStartPos, yStartPos = term.getCursorPos()
+	textutils.slowPrint(str, temps)
+	return xStartPos, yStartPos
+end
+
+function centerSlowWrite(str, temps)
+	local _, yPos = term.getCursorPos()
+	local xSize = term.getSize()
+	
+	term.setCursorPos((xSize/2)-(string.len(str)/2), yPos)
+	xStartPos, yStartPos = term.getCursorPos()
+	textutils.slowWrite(str, temps)
+	return xStartPos, yStartPos
+end
+
+function reverseColors()	
+	if not isColorsReversed then
+		term.setBackgroundColor(textColor)
+		term.setTextColor(backgroundColor)
+		isColorsReversed = true
+	else
+		term.setBackgroundColor(backgroundColor)
+		term.setTextColor(textColor)
+		isColorsReversed = false
+	end
+end
+
+function download(url, path)
+	local file = fs.open(path, "w")
+	local data = http.get(url)
+	
+	file.write(data.readAll())
+	file.close()
+end
+
+function setVersion(version)
+	local versionFile = fs.open("NassOS/version", "w")
+	versionFile.write(arg0)
+	versionFile.close()
+end
+
+function paintComponent()
+	term.setBackgroundColor(backgroundColor)
+	term.setTextColor(textColor)
+	print("d")
+	term.clear()
+	term.setCursorPos(1, 7)
+	reverseColors()
+	centerPrint(" MENU ")
+	reverseColors()
+	print()
+	if isNassOSInstalled then
+		centerPrint(" F1:.RESET TO FACTORY SETTINGS ")
+		centerPrint(" F2:..........UNINSTALL NASSOS ")
+		centerPrint(" F4:......DISABLE AUTO-UPDATES ")
+		centerPrint(" F5:.......ENABLE AUTO-UPDATES ")
+		centerPrint(" F6:......QUIT BIOS AND REBOOT ")
+	else
+		centerPrint(" F1:............INSTALL NASSOS ")
+		centerPrint(" F2:......QUIT BIOS AND REBOOT ")
+	end
+end
+
+function confirm()
+	--Reinit
+	term.setBackgroundColor(backgroundColor)
+	term.setTextColor(textColor)
+	term.clear()
+	term.setCursorPos(1, 7)
+	reverseColors()
+	centerPrint(" CONFIRM ")
+	reverseColors()
+	print()
+	
+	centerPrint(" F1: YES ")
+	centerPrint(" F2: NO ")
+	
+	--Internal listener
+	while true do
+		_, key = os.pullEvent("key")
+		
+		if key == 59 then
+			return true
+		elseif key == 60 then
+			return false
+		end
+	end
+end
+
+function loadingScreen(str)
+	--Reinit
+	term.setBackgroundColor(backgroundColor)
+	term.setTextColor(textColor)
+	term.setCursorPos(1, 9)
+	term.clearLine()
+	reverseColors()
+	centerPrint(" "..str.." ")
+	reverseColors()
+end
+
+function listener()
+	if isNassOSInstalled then
+		while true do
+			_, key = os.pullEvent("key")
+			
+			if key == 59 then
+				--Reset to factory settings
+				if confirm() then
+					term.clear()
+					loadingScreen("RESETING NASSOS")
+					nass.setVersion("0")
+					loadingScreen("REBOOTING...")
+					sleep(0.8)
+					os.reboot()
+				else
+					paintComponent()
+				end
+			elseif key == 60 then
+				--Uninstall NassOS
+				if confirm() then
+					term.clear()
+					loadingScreen("DELETING NASSOS")
+					fs.delete("../NassOS")
+					loadingScreen("REBOOTING...")
+					os.reboot()
+				else
+					paintComponent()
+				end
+			elseif key == 62 then
+				--Disable auto-updates
+				if confirm() then
+					local versionFile = fs.open("version", "w")
+					versionFile.write("*")
+					versionFile.close()
+				end
+				paintComponent()
+			elseif key == 63 then
+				--Enable auto-updates
+				if confirm() then
+					local versionFile = fs.open("version", "w")
+					versionFile.write("unknow")
+					versionFile.close()
+				end
+				paintComponent()
+			elseif key == 64 then
+				--Quit bios
+				os.reboot()
+			end
+		end
+	else
+		while true do
+			_, key = os.pullEvent("key")
+			
+			if key == 59 then
+				--INSTALL NASSOS
+				if confirm() then
+					term.clear()
+					loadingScreen("DOWNLOADING INSTALLER")
+					download("http://www.nasso.url.ph/fichiers/computerCraft/NassOS/startup", "startup")
+					sleep(3)
+					loadingScreen("DOWNLOADING INSTALLER")
+					sleep(1)
+					loadingScreen("REBOOTING...")
+					sleep(1)
+					os.reboot()
+				else
+					paintComponent()
+				end
+			elseif key == 60 then
+				--Quit bios
+				os.reboot()
+			end
+		end
+	end
+end
+--Programm
+if not term.isColor() then
+	print("Can not run on a classic computer. You must a advenced computer for install NassOS.")	
+	return
+end
+paintComponent()
+listener()

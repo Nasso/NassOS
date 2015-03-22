@@ -1,0 +1,451 @@
+--Variables
+local tArgs = { ... }
+local appName = "Explorateur"
+local backgroundColor = colors.white
+local highlightBackgroundColor = colors.lightBlue
+local highlightTextColor = colors.black
+local folderColor = colors.yellow
+local fileColor = colors.white
+local textColor = colors.black
+local xSize, ySize = term.getSize()
+local rootPanel = window.create(term.current(), 1, 2, xSize, ySize-1)
+local x, y = rootPanel.getSize()
+local container = window.create(rootPanel, 1, 1, x-14, y)
+local sidePanel = window.create(rootPanel, x-13, 1, 14, y)
+local width, height = container.getSize()
+local containerAera = {1, 2, xSize-14, ySize}
+local sideAera = {xSize-13, 2, xSize, ySize}
+local topLeft = {1, 1}
+local files = {}
+local currentDir = "Documents"
+local isProgramm = true
+local btnXPos = 3
+local btnYPos = 2
+local options = {{name="Copier", always=false}, {name="Coller", always=true}, {name="Supprimer", always=false}, {name="Renommer", always=false}, {name="Nouv. dossier", always=true}, {name="Nouv. fichier", always=true}, {name="Edit", always=false}, {name="Executer", always=false}}
+local sideBar = false
+local clipboard = nil
+local reading = false
+
+--Load API
+os.loadAPI("NassOS/nass")
+
+--Function
+local function getSelectedFile()
+	for k, v in pairs(files) do
+		if files[k].selected then
+			return files[k]
+		end
+	end
+	
+	return nil
+end
+
+local function paintSideBar()
+	local currentLine = 1
+	sideBar = true
+	
+	sidePanel.setTextColor(colors.gray)
+	sidePanel.setBackgroundColor(colors.lightBlue)
+	sidePanel.clear()
+	sidePanel.setCursorPos(1, 1)
+	for k, v in pairs(options) do
+		if getSelectedFile() == nil or getSelectedFile().name == ".." then
+			if options[k].always then
+				sidePanel.setTextColor(colors.gray)
+				sidePanel.write(options[k].name)
+			else
+				sidePanel.setTextColor(colors.lightGray)
+				sidePanel.write(options[k].name)
+			end
+		else
+			if fs.isDir(getSelectedFile().path) then
+				options[8].name = "Explorer"
+			else
+				options[8].name = "Executer"
+			end
+			sidePanel.setTextColor(colors.gray)
+			sidePanel.write(options[k].name)
+		end
+		--Back to line because \n is not supported with syntax container.write(str)
+		sidePanel.setCursorPos(1, currentLine+1)
+		currentLine = currentLine + 1
+	end
+end
+
+local function addLine(text, isHighlight)
+	local _, currentLine = container.getCursorPos()
+	if isHighlight == nil then
+		isHighlight = false
+	end
+	
+	if isHighlight then
+		container.setBackgroundColor(highlightBackgroundColor)
+		container.setTextColor(highlightTextColor)
+	else
+		container.setBackgroundColor(backgroundColor)
+	end
+	container.write(text)
+	--Back to line because \n is not supported with syntax container.write(str)
+	container.setCursorPos(1, currentLine+1)
+	
+	--Reset background
+	container.setBackgroundColor(backgroundColor)
+	container.setTextColor(textColor)
+end
+
+local function setDir(path)
+	currentDir = path
+	--clear files table
+	files = {}
+	for k, v in pairs(fs.list(path)) do
+		files[k] = {name=v, selected=false, path=currentDir.."/"..v}
+	end
+	container.clear()
+	container.setCursorPos(topLeft[1], topLeft[2])
+	--Add the .. folder if we arn't in root
+	if currentDir ~= "" and currentDir ~= "/" then
+		table.insert(files, 1, {name="..", selected=false, path=".."})
+	end
+	
+	for k, v in pairs(files) do
+		if files[k].name == ".." then --Parent
+			container.setBackgroundColor(folderColor)
+			container.write("<")
+			container.setBackgroundColor(backgroundColor)
+			addLine(files[k].name.."/")
+		elseif fs.isDir(currentDir.."/"..files[k].name) then --Directory
+			container.setBackgroundColor(folderColor)
+			container.write("]")
+			container.setBackgroundColor(backgroundColor)
+			addLine(files[k].name.."/")
+		else --File
+			container.setBackgroundColor(fileColor)
+			container.write("#")
+			container.setBackgroundColor(backgroundColor)
+			addLine(files[k].name)
+		end
+	end
+	
+	paintSideBar()
+end
+
+local function repaint()
+	container.clear()
+	container.setCursorPos(topLeft[1], topLeft[2])
+	
+	for k, v in pairs(files) do
+		if files[k].name == ".." then --Parent
+			container.setBackgroundColor(folderColor)
+			container.write("<")
+			container.setBackgroundColor(backgroundColor)
+			if files[k].selected then
+				addLine(files[k].name.."/", true)
+			else
+				addLine(files[k].name.."/")
+			end
+		elseif fs.isDir(currentDir.."/"..files[k].name) then --Directory
+			container.setBackgroundColor(folderColor)
+			container.write("]")
+			container.setBackgroundColor(backgroundColor)
+			if files[k].selected then
+				addLine(files[k].name.."/", true)
+			else
+				addLine(files[k].name.."/")
+			end
+		else --File
+			container.setBackgroundColor(fileColor)
+			container.write("#")
+			container.setBackgroundColor(backgroundColor)
+			if files[k].selected then
+				addLine(files[k].name, true)
+			else
+				addLine(files[k].name)
+			end
+		end
+	end
+end
+
+local function paintComponent(args)
+	term.setBackgroundColor(backgroundColor)
+	term.setTextColor(textColor)
+	term.clear()
+	term.setCursorPos(1, 1)
+	term.setBackgroundColor(colors.gray)
+	term.setTextColor(colors.white)
+	term.clearLine()
+	if os.getComputerLabel() ~= nil and string.len(os.getComputerLabel()) < 16 then
+		write(os.getComputerLabel())
+	else
+		write("User "..os.getComputerID())
+	end
+	nass.centerWrite(appName)
+	term.setCursorPos(xSize, 1)
+	term.setBackgroundColor(colors.red)
+	term.setTextColor(colors.white)
+	write("X")
+	container.setCursorPos(topLeft[1], topLeft[2])
+	container.setBackgroundColor(backgroundColor)
+	container.setTextColor(textColor)
+	container.clear()
+	
+	--Render
+	if args[1] ~= nil then
+		setDir(args[1])
+	else
+		setDir("Documents")
+	end
+	
+	--Return success
+	return true
+end
+
+
+
+local function scroller(side)
+	if side < 0 then --UP
+		if topLeft[2] < 1 then
+			topLeft[2] = topLeft[2]+1
+			--Rapaint
+			repaint()
+		end
+	end
+	if side > 0 then --DOWN
+		if (topLeft[2] > 1-(#files-height)) then
+			topLeft[2] = topLeft[2]-1
+			--Rapaint
+			repaint()
+		end
+	end
+end
+
+local function listener_CLOSE_OPERATION()
+	while true do
+		_, button, xPos, yPos = os.pullEvent("mouse_click")
+		
+		--Left click
+		if button == 1 then
+			if nass.isAera(xPos, yPos, {xSize, 1, xSize, 1}) and isProgramm then
+				if isProgramm then
+					term.setCursorBlink(false)
+					return --EXIT_ON_CLOSE
+				end
+			end
+		end
+		
+		--Right click (unused)
+--		if button == 2 then
+--		
+--		end
+	end
+end
+
+local function listener_NAVIGATE()
+	while true do
+		event, button, xPos, yPos = os.pullEvent()
+		
+		--Click
+		if event == "mouse_click" and not reading then
+			--Set yPos relative to container
+			yPos = yPos - 1
+			
+			local clicked = yPos+1+topLeft[2]/(-1) --The name of object it clicked
+			--Left click
+			if button == 1 then
+				if nass.isAera(xPos, yPos+1, containerAera) and isProgramm then
+					if files[clicked] ~= nil then
+						if files[clicked].selected then
+							if files[clicked].name == ".." then
+								setDir(fs.getDir(currentDir))
+							elseif fs.isDir(files[clicked].path) then
+								topLeft = {1, 1}
+								setDir(files[clicked].path)
+							else
+								isProgramm = false
+								shell.run("NassOS/LuaIDE \""..files[clicked].path.."\"")
+								paintComponent({currentDir})
+								isProgramm = true
+							end
+						else
+							--Reset selection
+							for k, v in pairs(files) do
+								files[k].selected = false
+							end
+							
+							files[clicked].selected = true
+							repaint()
+							paintSideBar()
+						end
+					end
+				end
+			end
+			
+			--Right click (unused)
+--			if button == 2 then
+--				
+--			end
+		end
+		
+		--Scroll
+		if event == "mouse_scroll" then
+			if nass.isAera(xPos, yPos, containerAera) and isProgramm then
+				scroller(button)
+			end
+		end
+		
+		--Fonctions
+		if event == "key" and not reading and isProgramm then
+			indexSelected = 0
+			--Determine le ficher selectioné
+			for k, v in pairs(files) do
+				if files[k].selected then
+					selectedFile = files[k]
+					indexSelected = k
+				end
+			end
+			
+			if button == keys.delete then
+				if selectedFile ~= nil then
+					fs.delete(selectedFile.path)
+					--Update content
+					files = {}
+					for k, v in pairs(fs.list(currentDir)) do
+						files[k] = {name=v, selected=false, path=currentDir.."/"..v}
+					end
+					if currentDir ~= "" and currentDir ~= "/" then
+						table.insert(files, 1, {name="..", selected=false, path=".."})
+					end
+					repaint()
+				end
+			end
+			if button == keys.up then
+				if indexSelected == 0 then
+					indexSelected = 1
+					files[indexSelected].selected = true
+				elseif indexSelected > 1 then
+					files[indexSelected].selected = false
+					files[indexSelected-1].selected = true
+				end
+			end
+			if button == keys.down then
+				if indexSelected == 0 then
+					indexSelected = #files
+					files[indexSelected].selected = true
+				elseif indexSelected < #files then
+					files[indexSelected].selected = false
+					files[indexSelected+1].selected = true
+				end
+			end
+			repaint()
+			paintSideBar()
+		end
+	end
+end
+
+local function listener_SIDEBAR()
+	while true do
+		_, button, xPos, yPos = os.pullEvent("mouse_click")
+		clicked = yPos - 1
+		
+		if button == 1 then
+			if nass.isAera(xPos, yPos, sideAera) and isProgramm then
+				if options[clicked] ~= nil then
+					if sideBar then
+						if options[clicked] == options[1] then
+							if getSelectedFile() ~= nil and getSelectedFile().name ~= ".." then
+								clipboard = getSelectedFile()
+							end
+						end
+						if options[clicked] == options[2] then
+							if clipboard ~= nil then
+								if fs.exists(clipboard.path) then
+									fs.copy(clipboard.path, currentDir.."/"..clipboard.name.." - Copie")
+								else
+									sideBar.setCursorPos(1, 2)
+									sideBar.setTextColor(colors.red)
+									sideBar.clearLine()
+									sideBar.write("Fichier inexistant")
+								end
+							end
+						end
+						if options[clicked] == options[3] then
+							if getSelectedFile() ~= nil and getSelectedFile().name ~= ".." then
+								fs.delete(getSelectedFile().path)
+							end
+						end
+						if options[clicked] == options[4] then
+							if getSelectedFile() ~= nil and getSelectedFile().name ~= ".." then
+								sidePanel.setCursorPos(1, 4)
+								sidePanel.clearLine()
+								reading = true
+								local fileName = read()
+								if not fs.exists(currentDir.."/"..fileName) then
+									fs.move(getSelectedFile().path, currentDir.."/"..fileName)
+								end
+								reading = false
+							end
+						end
+						if options[clicked] == options[5] then
+							sidePanel.setTextColor(colors.gray)
+							sidePanel.setCursorPos(1, 5)
+							sidePanel.clearLine()
+							reading = true
+							local fileName = read()
+							reading = false
+							if fileName == nil or fileName == "" then
+								fileName = "Nouveau Dossier"
+							end
+							fs.makeDir(currentDir.."/"..fileName)
+						end
+						if options[clicked] == options[6] then
+							
+							sidePanel.setTextColor(colors.gray)
+							sidePanel.setCursorPos(1, 6)
+							sidePanel.clearLine()
+							reading = true
+							local fileName = read()
+							reading = false
+							if fileName == nil or fileName == "" then
+								fileName = "Nouveau Fichier"
+							end
+							fs.open(currentDir.."/"..fileName, "w").close()
+						end
+						if options[clicked] == options[7] then
+							if getSelectedFile() ~= nil and getSelectedFile().name ~= ".." then
+								isProgramm = false
+								shell.run("NassOS/LuaIDE \""..getSelectedFile().path.."\"")
+								paintComponent({currentDir})
+								isProgramm = true
+							end
+						end
+						if options[clicked] == options[8] then
+							if getSelectedFile() ~= nil and getSelectedFile().name ~= ".." then
+								if fs.isDir(getSelectedFile().path) then
+									setDir(getSelectedFile().path)
+								else
+									isProgramm = false
+									term.setBackgroundColor(colors.black)
+									term.setTextColor(colors.white)
+									term.setCursorPos(1, 1)
+									term.clear()
+									shell.run(getSelectedFile().path)
+									nass.centerPrint("Terminated, press any key to continue")
+									os.pullEvent("key")
+									paintComponent({currentDir})
+									isProgramm = true
+								end
+							end
+						end
+						setDir(currentDir)
+						repaint()
+					end
+				end
+			end
+		end
+	end
+end
+
+--Programm
+if paintComponent(tArgs) then
+	--One listener per object
+	parallel.waitForAny(listener_CLOSE_OPERATION, listener_NAVIGATE, listener_SIDEBAR)
+end

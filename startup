@@ -1,0 +1,97 @@
+function download(url, path)
+	local file = fs.open(path, "w")
+	local data = http.get(url)
+	
+	file.write(data.readAll())
+	file.close()
+end
+
+function pressF1()
+	local id = 0
+	while id ~= 59 do
+		_, id = os.pullEvent("key")
+	end
+end
+
+function sleep1Sec()
+	sleep(1)
+end
+
+function isUpdateAvailable()
+	--Determining the current version
+	versionFile = fs.open("NassOS/version", "r")
+	currentVersion = versionFile.readAll()
+	versionFile.close()
+	
+	--Check if updates are enabled
+	if currentVersion == "*" then
+		return false
+	end
+	
+	--Determining the last version
+	download("http://www.nasso.url.ph/fichiers/computerCraft/NassOS/NassOS/version", "last-version")
+	lastVersionFile = fs.open("last-version", "r")
+	lastVersion = lastVersionFile.readAll()
+	lastVersionFile.close()
+	
+	--Test the version
+	if currentVersion ~= lastVersion then
+		return true
+	else
+		return false
+	end
+end
+
+function boot()
+	local i = 0
+
+	term.setBackgroundColor(colors.black)
+	term.clear()
+	term.setCursorPos(1, 1)
+	while i < 3 do
+		write("_")
+		sleep(0.5)
+		term.clear()
+		term.setCursorPos(1, 1)
+		sleep(0.5)
+		i = i + 1
+	end
+	print("Loading files... Loaded.")
+	print("Loading libraries... Loaded.")
+	print("Loading BIOS... Loaded.")
+	print("Press F1 for launch BIOS.")
+	if parallel.waitForAny(pressF1, sleep1Sec) == 1 then
+		shell.run("bios")
+	end
+	if fs.exists("nassOS") then
+		if isUpdateAvailable() then
+			write("Downloading update for NassOS... ")
+			download("http://www.nasso.url.ph/fichiers/computerCraft/NassOS/NassOS/nassOS", "NassOS/nassOS")
+			download("http://www.nasso.url.ph/fichiers/computerCraft/NassOS/NassOS/version", "NassOS/version")
+			download("http://www.nasso.url.ph/fichiers/computerCraft/NassOS/NassOS/nass", "NassOS/nass")
+			print("Downloaded.")
+			print("Launching NassOS...")
+			sleep(0.2)
+			shell.run("NassOS/nassOS Update")
+		else
+			write("Loading NassOS... ")
+			sleep(0.4)
+			print("Loaded.")
+			print("Launching NassOS...")
+			sleep(0.2)
+			shell.run("NassOS/nassOS")
+		end
+	else
+		write("Downloading NassOS... ")
+		download("http://www.nasso.url.ph/fichiers/computerCraft/NassOS/NassOS/nassOS", "NassOS/nassOS")
+		download("http://www.nasso.url.ph/fichiers/computerCraft/NassOS/NassOS/version", "NassOS/version")
+		download("http://www.nasso.url.ph/fichiers/computerCraft/NassOS/NassOS/nass", "NassOS/nass")
+		print("Downloaded.")
+		print("Launching NassOS...")
+		sleep(0.2)
+		shell.run("NassOS/nassOS Update")
+	end
+end
+
+--Booting
+boot()

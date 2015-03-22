@@ -1,0 +1,169 @@
+--Variables
+passFile = nil
+pass = nil
+
+--Function
+function centerPrint(str)
+	local _, yPos = term.getCursorPos()
+	local xSize = term.getSize()
+	
+	term.setCursorPos((xSize/2)-(string.len(str)/2), yPos)
+	xStartPos, yStartPos = term.getCursorPos()
+	print(str)
+	return xStartPos, yStartPos
+end
+
+function centerWrite(str)
+	local _, yPos = term.getCursorPos()
+	local xSize = term.getSize()
+	
+	term.setCursorPos((xSize/2)-(string.len(str)/2), yPos)
+	xStartPos, yStartPos = term.getCursorPos()
+	write(str)
+	return xStartPos, yStartPos
+end
+
+function centerSlowPrint(str)
+	local _, yPos = term.getCursorPos()
+	local xSize = term.getSize()
+	
+	term.setCursorPos((xSize/2)-(string.len(str)/2), yPos)
+	xStartPos, yStartPos = term.getCursorPos()
+	textutils.slowPrint(str)
+	return xStartPos, yStartPos
+end
+
+function centerSlowWrite(str)
+	local _, yPos = term.getCursorPos()
+	local xSize = term.getSize()
+	
+	term.setCursorPos((xSize/2)-(string.len(str)/2), yPos)
+	xStartPos, yStartPos = term.getCursorPos()
+	textutils.slowWrite(str)
+	return xStartPos, yStartPos
+end
+
+function centerSlowPrint(str, temps)
+	local _, yPos = term.getCursorPos()
+	local xSize = term.getSize()
+	
+	term.setCursorPos((xSize/2)-(string.len(str)/2), yPos)
+	xStartPos, yStartPos = term.getCursorPos()
+	textutils.slowPrint(str, temps)
+	return xStartPos, yStartPos
+end
+
+function centerSlowWrite(str, temps)
+	local _, yPos = term.getCursorPos()
+	local xSize = term.getSize()
+	
+	term.setCursorPos((xSize/2)-(string.len(str)/2), yPos)
+	xStartPos, yStartPos = term.getCursorPos()
+	textutils.slowWrite(str, temps)
+	return xStartPos, yStartPos
+end
+
+function welcome()
+	term.setBackgroundColor(colors.white)
+	term.clear()
+	term.setCursorPos(19, 9)
+	term.setTextColor(colors.lightBlue)
+	textutils.slowWrite("Bienvenue")
+	sleep(1)
+	write(".")
+	sleep(1)
+	write(".")
+	sleep(1)
+	write(".")
+	sleep(1)
+	shell.run("desktop")
+end
+
+function login()
+	term.setTextColor(colors.lightBlue)
+	term.setBackgroundColor(colors.white)
+	term.clear()
+	term.setCursorPos(1, 9)
+	centerSlowPrint("Entrez le mot de passe :")
+	
+	if string.reverse(nass.textAera(colors.lightBlue, colors.white, 32, "*")) ~= pass then
+		term.setBackgroundColor(colors.white)
+		term.setCursorPos(1, 9)
+		term.clearLine()
+		term.setTextColor(colors.red)
+		centerSlowWrite("Mauvais mot de passe!")
+		sleep(1)
+		return false
+	else
+		return true
+	end
+end
+
+function register()
+	repeat
+		term.setBackgroundColor(colors.white)
+		term.clear()
+		term.setTextColor(colors.lightBlue)
+		term.setCursorPos(1, 9)
+		centerSlowPrint("Entrez votre nouveau mot de passe :")
+		
+		--Enter pass first time
+		term.setBackgroundColor(colors.lightBlue)
+		xP, yP = centerSlowPrint("                                    ")
+		term.setCursorPos(xP+1, yP)
+		term.setTextColor(colors.white)
+		firstPass = read("*")
+		
+		print()
+		
+		term.setBackgroundColor(colors.white)
+		term.clear()
+		term.setTextColor(colors.lightBlue)
+		term.setCursorPos(1, 9)
+		centerSlowPrint("Confirmez le mot de passe :")
+		
+		--Enter pass second time
+		term.setBackgroundColor(colors.lightBlue)
+		centerSlowPrint("                                    ")
+		term.setCursorPos(xP+1, yP)
+		term.setTextColor(colors.white)
+		secondPass = read("*")
+		
+		if firstPass ~= secondPass then
+			term.setBackgroundColor(colors.white)
+			term.clear()
+			term.setTextColor(colors.red)
+			term.setCursorPos(1, 9)
+			centerSlowPrint("Les mots de passe ne correspondent pas !")
+			term.setTextColor(colors.pink)
+			centerSlowPrint("Merci de reessayer.")
+			sleep(3)
+		else
+			--Save the pass
+			pass = string.reverse(firstPass)
+			passFile.write(pass)
+			
+			--Close the passFile
+			passFile.close()
+			
+			--Go to desktop
+			shell.run("NassOS/desktop")
+		end
+	until firstPass == secondPass
+end
+
+--Programm
+if not fs.exists("/NassOS/pass") then
+	passFile = fs.open("/NassOS/pass", "w")
+	register()
+else
+	--On init le mot de passe
+	passFile = fs.open("/NassOS/pass", "r")
+	pass = passFile.readAll()
+	--On ferme le fichier
+	passFile.close()
+	--Puis on boucle tant que l'utilisateur n'a pas entré le bon mot de passe.
+	repeat until login()
+	--Puis on va au bureau
+	shell.run("NassOS/desktop")
+end

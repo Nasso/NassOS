@@ -1,0 +1,231 @@
+--Variables
+local appName = "Panneau de Config"
+local isMenu = true
+local isRename = false
+local compName = nil
+local backgroundColor = colors.lightBlue
+local textColor = colors.gray
+local xSize, ySize = term.getSize()
+local btnXPos = 1
+local btnYPos = 2
+local BTN_BACK_MENU = {0, 0, 0, 0}
+local BTN_RENAME = {0, 0, 0, 0}
+local BTN_PERIPHERALS = {0, 0, 0, 0}
+local BTN_SYSTEM = {0, 0, 0, 0}
+
+--Load API
+os.loadAPI("NassOS/nass")
+
+local function paintComponent()
+	term.setBackgroundColor(backgroundColor)
+	term.setTextColor(textColor)
+	term.clear()
+	term.setCursorPos(1, 1)
+	term.setBackgroundColor(colors.gray)
+	term.setTextColor(colors.white)
+	term.clearLine()
+	if os.getComputerLabel() ~= nil and string.len(os.getComputerLabel()) < 16 then
+		write(os.getComputerLabel())
+	else
+		write("User "..os.getComputerID())
+	end
+	nass.centerWrite(appName)
+	term.setCursorPos(xSize, 1)
+	term.setBackgroundColor(colors.red)
+	term.setTextColor(colors.white)
+	write("X")
+	term.setCursorPos(1, 2)
+	
+	--Render
+	term.setCursorPos(2, 3)
+	nass.resetBtnPos()	
+	BTN_SYSTEM = nass.addBtn("Systeme", nass.layout.flow)
+	BTN_PERIPHERALS = nass.addBtn("Peripheriques", nass.layout.flow)
+	term.setBackgroundColor(backgroundColor)
+	term.setTextColor(textColor)
+	isMenu = true
+	isRename = false
+	
+	--Return success
+	return true
+end
+
+local function listener_CLOSE_OPERATION()
+	while true do
+		_, button, xPos, yPos = os.pullEvent("mouse_click")
+		
+		--Left click
+		if button == 1 then
+			if nass.isAera(xPos, yPos, {xSize, 1, xSize, 1}) then
+				term.setCursorBlink(false)
+				return --EXIT_ON_CLOSE
+			end
+			
+		end
+		
+		--Right click (unused)
+--		if button == 2 then
+--			
+--		end
+	end
+end
+
+local function listener_BTN_BACK_MENU()
+	while true do
+		_, button, xPos, yPos = os.pullEvent("mouse_click")
+		
+		--Left click
+		if button == 1 then
+			if nass.isAera(xPos, yPos, BTN_BACK_MENU) and not isMenu then
+				paintComponent()
+				isMenu = true
+				isRename = false
+			end
+		end
+		
+		--Right click (unused)
+--		if button == 2 then
+--			if nass.isAera(xPos, yPos, BTN_BACK_MENU) and not isMenu then
+--				
+--			end
+--		end
+	end
+end
+
+local function listener_BTN_SYSTEM()
+	while true do
+		_, button, xPos, yPos = os.pullEvent("mouse_click")
+		
+		if isMenu then
+			--Left click
+			if button == 1 then
+				if nass.isAera(xPos, yPos, BTN_SYSTEM) and isMenu then
+					isMenu = false
+					isRename = true
+					nass.clearContent(backgroundColor)
+					term.setCursorPos(1, 3)
+					term.setBackgroundColor(backgroundColor)
+					term.setTextColor(textColor)
+					if os.getComputerLabel() ~= nil then
+						print(" Nom de cet ordinateur : "..os.getComputerLabel()..".")
+					else
+						print(" Nom de cet ordinateur : Aucun.")
+					end
+					print(" ID de cet ordinateur : "..os.getComputerID()..".")
+					
+					if pocket then
+						print(" Type de cet ordinateur : Pocket.")
+					elseif turtle then
+						print(" Type de cet ordinateur : Turtle.")
+					else
+						print(" Type de cet ordinateur : Ordinateur fixe.")
+					end
+					
+					print(" Version de Craft OS : "..os.version()..".")
+					print(" Temps ecoule depuis le demarrage : "..os.clock().."s.")
+					local _, yCursPos = term.getCursorPos()
+					write(string.rep("\n", (ySize-yCursPos)-3))
+					term.setCursorPos(nass.centerPrint(string.rep(" ", (string.len("Retour")+2)+(string.len("Renommer")+2))))
+					nass.resetBtnPos()
+					BTN_BACK_MENU = nass.addBtn("Retour", nass.layout.flow)
+					BTN_RENAME = nass.addBtn("Renommer", nass.layout.flow)
+				end
+			end
+			
+			--Right click (unused)
+--			if button == 2 then
+--				if nass.isAera(xPos, yPos, BTN_SYSTEM) and isMenu then
+--					
+--				end
+--			end
+		end
+	end
+end
+
+local function listener_BTN_PERIPHERALS()
+	while true do
+		_, button, xPos, yPos = os.pullEvent("mouse_click")
+		
+		--Left click
+		if button == 1 then
+			if nass.isAera(xPos, yPos, BTN_PERIPHERALS) and isMenu then
+				isMenu = false
+				nass.clearContent(backgroundColor)
+				term.setCursorPos(2, 3)
+				print("Peripheriques :")
+				--Find and print periphs
+				for k, v in pairs(peripheral.getNames()) do --K stocke l'indice ([k]), et v la valeur (foo[k] = v) et pairs() defini le tableau (pairs(table))
+					print("   - "..v.." : "..peripheral.getType(v))
+				end
+				
+				local _, yCursPos = term.getCursorPos()
+				write(string.rep("\n", (ySize-yCursPos)-3))
+				term.setCursorPos(nass.centerPrint(string.rep(" ", string.len("Retour")+2)))
+				nass.resetBtnPos()
+				BTN_BACK_MENU = nass.addBtn("Retour", nass.layout.flow)
+			end
+		end
+		
+		--Right click (unused)
+--		if button == 2 then
+--			if nass.isAera(xPos, yPos, BTN_PERIPHERALS) and isMenu then
+--				
+--			end
+--		end
+	end
+end
+
+
+
+local function listener_BTN_RENAME()
+	while true do
+		_, button, xPos, yPos = os.pullEvent("mouse_click")
+		
+		--Left click
+		if button == 1 then
+			if nass.isAera(xPos, yPos, BTN_RENAME) and isRename then
+				isMenu = false
+				isRename = false
+				nass.clearContent(backgroundColor)
+				term.setCursorPos(1, 3)
+				if os.getComputerLabel() == nil then
+					nass.centerPrint("Entrez le nouveau nom de cet ordinateur:")
+				else
+					nass.centerPrint("Entrez le nouveau nom de "..os.getComputerLabel()..":")
+				end
+				print()
+				repeat
+					_, yCursPos = term.getCursorPos()
+					compName = nass.textAera(textColor, backgroundColor)
+					if (compName ~= nil) then
+						if string.find(compName, " ") ~= nil then
+							term.setCursorPos(1, 3)
+							term.setBackgroundColor(backgroundColor)
+							term.clearLine()
+							term.setTextColor(colors.red)
+							nass.centerPrint("Le nom ne doit pas contenir d'espaces.")
+							term.setTextColor(textColor)
+						end
+					end
+					term.setCursorPos(1, yCursPos)
+				until not (compName == nil or compName == "" or string.find(compName, " ") ~= nil)
+				
+				os.setComputerLabel(compName)
+				paintComponent()
+			end
+		end
+		
+		--Right click (unused)
+--		if button == 2 then
+--			if nass.isAera(xPos, yPos, BTN_RENAME) and isRename then
+--				
+--			end
+--		end
+	end
+end
+
+--Programm
+if paintComponent() then
+	--One listener per object
+	parallel.waitForAny(listener_CLOSE_OPERATION, listener_BTN_SYSTEM, listener_BTN_PERIPHERALS, listener_BTN_BACK_MENU, listener_BTN_RENAME)
+end

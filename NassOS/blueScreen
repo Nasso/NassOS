@@ -1,0 +1,98 @@
+--Variables
+tArgs = { ... }
+
+--Functions
+function centerPrint(str)
+	local _, yPos = term.getCursorPos()
+	local xSize = term.getSize()
+	
+	term.setCursorPos((xSize/2)-(string.len(str)/2), yPos)
+	xStartPos, yStartPos = term.getCursorPos()
+	print(str)
+	return xStartPos, yStartPos
+end
+
+function centerWrite(str)
+	local _, yPos = term.getCursorPos()
+	local xSize = term.getSize()
+	
+	term.setCursorPos((xSize/2)-(string.len(str)/2), yPos)
+	xStartPos, yStartPos = term.getCursorPos()
+	write(str)
+	return xStartPos, yStartPos
+end
+
+function centerSlowPrint(str)
+	local _, yPos = term.getCursorPos()
+	local xSize = term.getSize()
+	
+	term.setCursorPos((xSize/2)-(string.len(str)/2), yPos)
+	xStartPos, yStartPos = term.getCursorPos()
+	textutils.slowPrint(str)
+	return xStartPos, yStartPos
+end
+
+function centerSlowWrite(str)
+	local _, yPos = term.getCursorPos()
+	local xSize = term.getSize()
+	
+	term.setCursorPos((xSize/2)-(string.len(str)/2), yPos)
+	xStartPos, yStartPos = term.getCursorPos()
+	textutils.slowWrite(str)
+	return xStartPos, yStartPos
+end
+
+function centerSlowPrint(str, temps)
+	local _, yPos = term.getCursorPos()
+	local xSize = term.getSize()
+	
+	term.setCursorPos((xSize/2)-(string.len(str)/2), yPos)
+	xStartPos, yStartPos = term.getCursorPos()
+	textutils.slowPrint(str, temps)
+	return xStartPos, yStartPos
+end
+
+function centerSlowWrite(str, temps)
+	local _, yPos = term.getCursorPos()
+	local xSize = term.getSize()
+	
+	term.setCursorPos((xSize/2)-(string.len(str)/2), yPos)
+	xStartPos, yStartPos = term.getCursorPos()
+	textutils.slowWrite(str, temps)
+	return xStartPos, yStartPos
+end
+
+--Programm
+term.setBackgroundColor(colors.blue)
+term.setTextColor(colors.white)
+term.clear()
+term.setCursorPos(1, 2)
+
+term.setBackgroundColor(colors.white)
+term.setTextColor(colors.blue)
+centerPrint("ERROR")
+
+term.setBackgroundColor(colors.blue)
+term.setTextColor(colors.white)
+print()
+
+--Print details
+centerPrint("Your computer has crashed, and NassOS has shutdown your computer for security.")
+centerPrint("NassOS get the following informations:")
+print("Proccess: "..tArgs[1])
+print("Object: "..tArgs[2])
+print("Message: "..tArgs[3])
+
+print()
+
+--Shutdown msg
+beforeXPos, beforeYPos = term.getCursorPos()
+print("Shutdown in 2 seconds.")
+sleep(1)
+term.setCursorPos(beforeXPos, beforeYPos)
+print("Shutdown in 1 second.")
+sleep(1)
+term.setCursorPos(beforeXPos, beforeYPos)
+print("Shutdown in 0 second.")
+sleep(1)
+os.shutdown()

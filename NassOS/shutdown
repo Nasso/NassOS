@@ -1,0 +1,23 @@
+--Variables
+backgroundColor = colors.white
+textColor = colors.blue
+
+--Load API
+os.loadAPI("NassOS/nass")
+
+--Programm
+term.setBackgroundColor(backgroundColor)
+term.setTextColor(textColor)
+term.clear()
+term.setCursorPos(1, 9)
+nass.centerSlowPrint("Au revoir!")
+term.setTextColor(colors.lightBlue)
+nass.centerSlowPrint("Arret en cours")
+nass.centerSlowWrite("....", 8)
+nass.centerSlowWrite("    ", 8)
+nass.centerSlowWrite("....", 8)
+nass.centerSlowWrite("    ", 8)
+nass.centerSlowWrite("....", 8)
+nass.centerSlowWrite("    ", 8)
+sleep(1)
+os.reboot()

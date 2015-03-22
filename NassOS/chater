@@ -1,0 +1,155 @@
+--Variables
+local backgroundColor = colors.lightBlue
+local textColor = colors.gray
+local xSize, ySize = term.getSize()
+local server = nil
+local pseudo = nil
+
+--Load API
+os.loadAPI("NassOS/nass")
+
+--Function
+local function paintComponent()
+	term.setBackgroundColor(backgroundColor)
+	term.setTextColor(textColor)
+	term.clear()
+	term.setCursorPos(1, 1)
+	term.setBackgroundColor(colors.gray)
+	term.setTextColor(colors.white)
+	term.clearLine()
+	if os.getComputerLabel() ~= nil and string.len(os.getComputerLabel()) < 16 then
+		write(os.getComputerLabel())
+	else
+		write("User "..os.getComputerID())
+	end
+	nass.centerWrite("Chat")
+	term.setCursorPos(xSize, 1)
+	term.setBackgroundColor(colors.red)
+	term.setTextColor(colors.white)
+	write("X")
+	term.setBackgroundColor(backgroundColor)
+	term.setTextColor(textColor)
+	
+	--Render
+	term.setCursorPos(1, 2)
+	print()
+	if peripheral.find("modem") == nil then
+		nass.centerPrint("Veuillez connecter un modem S.V.P.")
+		sleep(2)
+		return false
+	end
+	nass.centerPrint("Que voulez-vous faire ?")
+	print()
+	term.setCursorPos(nass.centerPrint("                      "))
+	nass.resetBtnPos()
+	BTN_SERV = nass.addBtn("Heberger", nass.layout.flow)
+	BTN_CLIENT = nass.addBtn("Rejoindre", nass.layout.flow)
+	term.setBackgroundColor(backgroundColor)
+	term.setTextColor(textColor)
+	
+	return true
+end
+
+local function listener_CLOSE_OPERATION()
+	while true do
+		_, button, xPos, yPos = os.pullEvent("mouse_click")
+		
+		--Left click
+		if button == 1 then
+			if nass.isAera(xPos, yPos, {xSize, 1, xSize, 1}) then -- DEFAULT_CLOSE_OPERATION
+				return -- EXIT_ON_CLOSE
+			end
+			
+		end
+		
+		--Right click
+		if button == 2 then
+			
+		end
+	end
+end
+
+local function listener_BTN_CLIENT()
+	while true do
+		_, button, xPos, yPos = os.pullEvent("mouse_click")
+		
+		--Left click
+		if button == 1 then
+			if nass.isAera(xPos, yPos, BTN_CLIENT) then
+				nass.clearContent(backgroundColor)
+				term.setCursorPos(1, 2)
+				print()
+				nass.centerPrint("Entrez le nom du serveur que")
+				nass.centerPrint("vous voulez rejoindre :")
+				print()
+				repeat
+					server = nass.textAera(colors.gray, colors.lightBlue)
+				until (server ~= "" or server ~= nil)
+				nass.clearContent(backgroundColor)
+				term.setCursorPos(1, 2)
+				term.setTextColor(textColor)
+				print()
+				nass.centerPrint("Entrez votre pseudo:")
+				print()
+				repeat
+					pseudo = nass.textAera(colors.gray, colors.lightBlue)
+				until (pseudo ~= "" or pseudo ~= nil)
+				term.setBackgroundColor(colors.black)
+				term.setTextColor(colors.white)
+				shell.run("clear")
+				shell.run("chat join "..server.." "..pseudo)
+				paintComponent()
+			end
+		end
+		
+		--Right click
+		if button == 2 then
+			if nass.isAera(xPos, yPos, BTN_CLIENT) then
+				
+			end
+		end
+	end
+end
+
+local function listener_BTN_SERV()
+	while true do
+		_, button, xPos, yPos = os.pullEvent("mouse_click")
+		
+		--Left click
+		if button == 1 then
+			if nass.isAera(xPos, yPos, BTN_SERV) then
+				nass.clearContent(backgroundColor)
+				term.setCursorPos(1, 2)
+				print()
+				nass.centerPrint("Entrez le nom du serveur que")
+				nass.centerPrint("vous voulez heberger :")
+				print()
+				repeat
+					server = nass.textAera(colors.gray, colors.lightBlue)
+				until (server ~= "" or server ~= nil)
+				term.setBackgroundColor(colors.black)
+				term.setTextColor(colors.white)
+				shell.run("clear")
+				nass.centerPrint("Faites CTRL + T pendant 1 seconde pour")
+				nass.centerPrint("arreter le serveur.")
+				nass.centerPrint(string.rep("_", xSize))
+				shell.run("chat host "..server)
+				paintComponent()
+			end
+		end
+		
+		--Right click
+		if button == 2 then
+			if nass.isAera(xPos, yPos, BTN_CLIENT) then
+				
+			end
+		end
+	end
+end
+
+
+
+--Programm
+if paintComponent() then
+	parallel.waitForAny(listener_CLOSE_OPERATION, listener_BTN_SERV, listener_BTN_CLIENT)
+end

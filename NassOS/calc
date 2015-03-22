@@ -1,0 +1,314 @@
+--Variables
+local appName = "Calculatrice"
+local compName = nil
+local backgroundColor = colors.lightBlue
+local textColor = colors.gray
+local xSize, ySize = term.getSize()
+local btnXPos = 2
+local btnYPos = 4
+local resultBox = window.create(term.current(), 1, 2, xSize, 1)
+local btns = {}
+local number1 = ""
+local number2 = ""
+local operator = ""
+local result = ""
+local virgule = false
+
+--Load API
+os.loadAPI("NassOS/nass")
+
+local function setResult(arg)
+	resultBox.clear()
+	--resultBox.setCursorPos(xSize-string.len(arg)+1, 1)
+	resultBox.setCursorPos(1, 1)
+	resultBox.write(arg)
+end
+
+local function paintComponent()
+	term.setBackgroundColor(backgroundColor)
+	term.setTextColor(textColor)
+	term.clear()
+	term.setCursorPos(1, 1)
+	term.setBackgroundColor(colors.gray)
+	term.setTextColor(colors.white)
+	term.clearLine()
+	if os.getComputerLabel() ~= nil and string.len(os.getComputerLabel()) < 16 then
+		write(os.getComputerLabel())
+	else
+		write("User "..os.getComputerID())
+	end
+	nass.centerWrite(appName)
+	term.setCursorPos(xSize, 1)
+	term.setBackgroundColor(colors.red)
+	term.setTextColor(colors.white)
+	write("X")
+	term.setCursorPos(btnXPos, btnYPos)
+	nass.resetBtnPos()
+	
+	--Render
+	btns['7'] = nass.addBtn("  7  ", nass.layout.flow)
+	btns['8'] = nass.addBtn("  8  ", nass.layout.flow)
+	btns['9'] = nass.addBtn("  9  ", nass.layout.flow)
+	btns['C'] = nass.addBtn("    C    ", nass.layout.flow)
+	btns['CE'] = nass.addBtn("    CE     ", nass.layout.flow)
+	btns['4'] = nass.addBtn("  4  ", nass.layout.flow)
+	btns['5'] = nass.addBtn("  5  ", nass.layout.flow)
+	btns['6'] = nass.addBtn("  6  ", nass.layout.flow)
+	btns['+'] = nass.addBtn("    +    ", nass.layout.flow)
+	btns['-'] = nass.addBtn("     -     ", nass.layout.flow)
+	btns['1'] = nass.addBtn("  1  ", nass.layout.flow)
+	btns['2'] = nass.addBtn("  2  ", nass.layout.flow)
+	btns['3'] = nass.addBtn("  3  ", nass.layout.flow)
+	btns['*'] = nass.addBtn("    *    ", nass.layout.flow)
+	btns['/'] = nass.addBtn("     /     ", nass.layout.flow)
+	btns['0'] = nass.addBtn("      0      ", nass.layout.flow)
+	btns[','] = nass.addBtn("  ,  ", nass.layout.flow)
+	btns['='] = nass.addBtn("           =           ", nass.layout.flow)
+	
+	resultBox.setBackgroundColor(colors.white)
+	resultBox.setTextColor(colors.black)
+	setResult("0")
+	
+	--Return success
+	return true
+end
+
+local function calc()
+	if number2 == "" or number1 == "" or tonumber(number1) == nil or tonumber(number2) == nil or operator == nil then
+		--Reset all
+		number1 = ""
+		number2 = ""
+		operator = ""
+		return 0
+	end
+	
+	if string.find(number1, ",") then
+		number1 = tonumber(string.gsub(number1, ",", "."))
+	else
+		number1 = tonumber(number1)
+	end
+	if string.find(number2, ",") then
+		number2 = tonumber(string.gsub(number2, ",", "."))
+	else
+		number2 = tonumber(number2)
+	end
+	
+	if operator == "+" then
+		result = number1+number2
+	elseif operator == "-" then
+		result = number1-number2
+	elseif operator == "*" then
+		result = number1*number2
+	elseif operator == "/" then
+		result = number1/number2
+	end
+	
+	if operator == "/" and number2 == 0 then
+		--Reset all
+		number1 = ""
+		number2 = ""
+		operator = ""
+		virgule = false
+		setResult("Division par 0 impossible !")
+		return 0
+	end
+	
+	setResult(result)
+	
+	--Set and reset
+	number1 = ""
+	number2 = ""
+	operator = ""
+	virgule = false
+end
+
+local function listener_CLOSE_OPERATION()
+	while true do
+		_, button, xPos, yPos = os.pullEvent("mouse_click")
+		
+		--Left click
+		if button == 1 then
+			if nass.isAera(xPos, yPos, {xSize, 1, xSize, 1}) then
+				term.setCursorBlink(false)
+				return --EXIT_ON_CLOSE
+			end
+			
+		end
+		
+		--Right click (unused)
+--		if button == 2 then
+--			
+--		end
+	end
+end
+
+local function listener_BTNS()
+	while true do
+		_, button, xPos, yPos = os.pullEvent("mouse_click")
+		
+		--Left click
+		if button == 1 then
+			if nass.isAera(xPos, yPos, btns['1']) then
+				if operator == "" then
+					number1 = number1 .. "1"
+				else
+					number2 = number2 .. "1"
+				end
+				result = ""
+			elseif nass.isAera(xPos, yPos, btns['2']) then
+				if operator == "" then
+					number1 = number1 .. "2"
+				else
+					number2 = number2 .. "2"
+				end
+				result = ""
+			elseif nass.isAera(xPos, yPos, btns['3']) then
+				if operator == "" then
+					number1 = number1 .. "3"
+				else
+					number2 = number2 .. "3"
+				end
+				result = ""
+			elseif nass.isAera(xPos, yPos, btns['4']) then
+				if operator == "" then
+					number1 = number1 .. "4"
+				else
+					number2 = number2 .. "4"
+				end
+				result = ""
+			elseif nass.isAera(xPos, yPos, btns['5']) then
+				if operator == "" then
+					number1 = number1 .. "5"
+				else
+					number2 = number2 .. "5"
+				end
+				result = ""
+			elseif nass.isAera(xPos, yPos, btns['6']) then
+				if operator == "" then
+					number1 = number1 .. "6"
+				else
+					number2 = number2 .. "6"
+				end
+				result = ""
+			elseif nass.isAera(xPos, yPos, btns['7']) then
+				if operator == "" then
+					number1 = number1 .. "7"
+				else
+					number2 = number2 .. "7"
+				end
+				result = ""
+			elseif nass.isAera(xPos, yPos, btns['8']) then
+				if operator == "" then
+					number1 = number1 .. "8"
+				else
+					number2 = number2 .. "8"
+				end
+				result = ""
+			elseif nass.isAera(xPos, yPos, btns['9']) then
+				if operator == "" then
+					number1 = number1 .. "9"
+				else
+					number2 = number2 .. "9"
+				end
+				result = ""
+			elseif nass.isAera(xPos, yPos, btns['0']) then
+				if operator == "" then
+					number1 = number1 .. "0"
+				else
+					number2 = number2 .. "0"
+				end
+				result = ""
+			elseif nass.isAera(xPos, yPos, btns[',']) then
+				if not virgule then
+					if operator == "" and number1 ~= "" then
+						number1 = number1 .. ","
+					elseif number2 ~= "" then
+						number2 = number2 .. ","
+					end
+					virgule = true
+				end
+			elseif nass.isAera(xPos, yPos, btns['C']) then
+				number1 = ""
+				number2 = ""
+				operator = ""
+				result = ""
+				virgule = false
+			elseif nass.isAera(xPos, yPos, btns['CE']) then
+				if operator == "" then
+					number1 = ""
+				else
+					number2 = ""
+					operator = ""
+				end
+				result = ""
+				virgule = false
+			end
+			
+			setResult(number1..operator..number2)
+			
+			if nass.isAera(xPos, yPos, btns['+']) then
+				if result ~= "" then
+					number1 = result
+				end
+				if operator == "" then
+					operator = "+"
+					setResult(number1..operator..number2)
+				else
+					calc()
+				end
+				virgule = false
+			elseif nass.isAera(xPos, yPos, btns['-']) then
+				if result ~= "" then
+					number1 = result
+				end
+				if operator == "" then
+					operator = "-"
+					setResult(number1..operator..number2)
+				else
+					calc()
+				end
+				virgule = false
+			elseif nass.isAera(xPos, yPos, btns['*']) then
+				if result ~= "" then
+					number1 = result
+				end
+				if operator == "" then
+					operator = "*"
+					setResult(number1..operator..number2)
+				else
+					calc()
+				end
+				virgule = false
+			elseif nass.isAera(xPos, yPos, btns['/']) then
+				if result ~= "" then
+					number1 = result
+				end
+				if operator == "" then
+					operator = "/"
+					setResult(number1..operator..number2)
+				else
+					calc()
+				end
+				virgule = false
+			elseif nass.isAera(xPos, yPos, btns['=']) then
+				if operator ~= "" then
+					calc()
+				end
+				virgule = false
+			end
+		end
+		
+		--Right click (unused)
+--		if button == 2 then
+--			if nass.isAera(xPos, yPos, btns['foo']) then
+--				
+--			end
+--		end
+	end
+end
+
+--Programm
+if paintComponent() then
+	--One listener per object
+	parallel.waitForAny(listener_CLOSE_OPERATION, listener_BTNS)
+end

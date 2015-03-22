@@ -1,0 +1,219 @@
+--Variables and constants
+layout = {
+	relative=0,
+	flow=1
+}
+
+local firstCall = {
+	addBtnFlow = true
+}
+local xSize, ySize = term.getSize()
+local btnXPos = 2
+local btnYPos = 3
+local version = nil
+local currentVersion = nil
+
+--Nass API
+function centerPrint(str)
+	local _, yPos = term.getCursorPos()
+	local xSize = term.getSize()
+	
+	term.setCursorPos((xSize/2)-(string.len(str)/2), yPos)
+	xStartPos, yStartPos = term.getCursorPos()
+	print(str)
+	return xStartPos, yStartPos
+end
+
+function centerWrite(str)
+	local _, yPos = term.getCursorPos()
+	local xSize = term.getSize()
+	
+	term.setCursorPos((xSize/2)-(string.len(str)/2), yPos)
+	xStartPos, yStartPos = term.getCursorPos()
+	write(str)
+	return xStartPos, yStartPos
+end
+
+function centerSlowPrint(str, temps)
+	local _, yPos = term.getCursorPos()
+	local xSize = term.getSize()
+	if temps == nil then
+		temps = 20
+	end
+	
+	term.setCursorPos((xSize/2)-(string.len(str)/2), yPos)
+	xStartPos, yStartPos = term.getCursorPos()
+	textutils.slowPrint(str, temps)
+	return xStartPos, yStartPos
+end
+
+function centerSlowWrite(str, temps)
+	local _, yPos = term.getCursorPos()
+	local xSize = term.getSize()
+	if temps == nil then
+		temps = 20
+	end
+	
+	term.setCursorPos((xSize/2)-(string.len(str)/2), yPos)
+	xStartPos, yStartPos = term.getCursorPos()
+	textutils.slowWrite(str, temps)
+	return xStartPos, yStartPos
+end
+
+function download(url, path)
+	local file = nil
+	file = fs.open(path, "w")
+	local data = http.get(url)
+	
+	file.write(data.readAll())
+	file.close()
+end
+
+function getVersion()
+	local versionFile = fs.open("NassOS/version", "r")
+	local version = versionFile.readAll()
+	versionFile.close()
+	return version
+end
+
+function setVersion(arg0)
+	local versionFile = fs.open("NassOS/version", "w")
+	versionFile.write(arg0)
+	versionFile.close()
+end
+
+function isUpdateAvailable()
+	--Check if updates are enabled
+	if currentVersion == "*" then
+		return false
+	end
+	
+	--Determining the last version
+	download("http://www.nasso.url.ph/fichiers/computerCraft/NassOS/version", "last-version")
+	local lastVersionFile = fs.open("last-version", "r")
+	local lastVersion = lastVersionFile.readAll()
+	lastVersionFile.close()
+	
+	--Test the version
+	return currentVersion ~= lastVersion
+end
+
+function clearContent(color)
+	for i = 2, ySize do
+		paintutils.drawLine(1, i, xSize, i, color)
+	end
+end
+
+function isAera(xPos, yPos, aera)
+	if xPos ~= nil and yPos~=nil and aera~=nil then
+		return ((xPos >= aera[1]) and (xPos <= aera[3])) and ((yPos >= aera[2] )) and (yPos <= aera[4])
+	end
+end
+
+function resetBtnPos()
+	btnXPos, btnYPos = term.getCursorPos()
+end
+
+function addBtn(text, layoutManager, color, arg0, arg1, arg2, arg3)
+	if layoutManager == nil then
+		error("Expected layout, got nil")
+	end
+	
+	if firstCall.addBtnFlow then
+		resetBtnPos()
+		firstCall.addBtnFlow = false
+	end
+	
+	if layoutManager == layout.relative then
+		for i=0, arg3 do
+			paintutils.drawLine(arg0, arg1+i, arg0+arg2, arg1+i, color)
+		end
+		term.setCursorPos(((arg0+arg2)-arg2/2)-(#text/2), (arg1+arg3)-arg3/2)
+		term.write(text)
+		term.setCursorPos(arg0+arg2+1, arg1+arg3)
+		return {arg0, arg1, arg0+arg2, arg1+arg3}
+	end
+	if layoutManager == layout.flow then
+		if (btnXPos+(string.len(text)+1)) < xSize then
+			maxX = btnXPos+(string.len(text)+1)
+		else
+			btnYPos = btnYPos + 4
+			btnXPos = 2
+			maxX = btnXPos+(string.len(text)+1)
+		end
+		
+		--draw btn
+		paintutils.drawLine(btnXPos, btnYPos, maxX, btnYPos, colors.lightGray)
+		paintutils.drawLine(btnXPos, btnYPos+1, maxX, btnYPos+1, colors.lightGray)
+		paintutils.drawLine(btnXPos, btnYPos+2, maxX, btnYPos+2, colors.lightGray)
+		
+		--draw txt
+		term.setTextColor(colors.blue)
+		term.setCursorPos(btnXPos+1, btnYPos+1)
+		term.write(text)
+		
+		--Set cursor pos after btn
+		term.setCursorPos(maxX+1, btnYPos+2)
+		
+		--Calc for next
+		previousBtnXPos = btnXPos
+		btnXPos = maxX + 2
+		
+		return  {previousBtnXPos, btnYPos, maxX, btnYPos+2}
+	end
+end
+
+function textAera(bColor, tColor, length, _char)
+	--Variables
+	local text = ""
+	
+	--Set default length
+	if length == nil then
+		length = xSize/2
+	end
+	
+	term.setBackgroundColor(bColor)
+	term.setTextColor(tColor)
+	local xPos, yPos = centerWrite(string.rep(" ", length))
+	
+	local function reader(c)
+		if c == nil then --All chars
+			while true do
+				event, symbol = os.pullEvent()
+				if symbol == keys.backspace then
+					text = string.sub(text, 1, string.len(text)-1)
+				elseif symbol == keys.enter then
+					return text
+				elseif event == "char" then
+					if string.len(text) < length-1 then
+						text = text..symbol
+					end
+				end
+				centerWrite(string.rep(" ", length))
+				term.setCursorPos(xPos, yPos)
+				term.write(text)
+			end
+		else --Specified char
+			while true do
+				event, symbol = os.pullEvent()
+				if symbol == keys.backspace then
+					text = string.sub(text, 1, string.len(text)-1)
+				elseif symbol == keys.enter then
+					return text
+				elseif event == "char" then
+					if string.len(text) < length-1 then
+						text = text..symbol
+					end
+				end
+				centerWrite(string.rep(" ", length))
+				term.setCursorPos(xPos, yPos)
+				term.write(string.rep(c, string.len(text)))
+			end
+		end
+	end
+	
+	return reader(_char)
+end
+
+--Init
+currentVersion = getVersion()

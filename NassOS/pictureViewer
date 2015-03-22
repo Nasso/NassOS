@@ -1,0 +1,4 @@
+img = paintutils.loadImage(tArgs[1])
+paintutils.drawImage(img, term.getCursorPos())
+xPos, yPos = term.getCursorPos()
+term.setCursorPos(1, yPos+1)

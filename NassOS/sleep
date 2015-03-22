@@ -1,0 +1,4 @@
+term.setBackgroundColor(colors.black)
+term.clear()
+os.pullEvent("mouse_click")
+shell.run("nassLogon")

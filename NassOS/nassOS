@@ -1,0 +1,110 @@
+--Variables
+tArgs = { ... }
+backgroundColor = colors.white
+textColor = colors.blue
+site = "http://www.nasso.url.ph/fichiers/computerCraft/NassOS/"
+
+--Load Nass API
+os.loadAPI("NassOS/nass")
+
+--Functions
+function paintComponent()
+	term.setBackgroundColor(backgroundColor)
+	term.setTextColor(textColor)
+	term.clear()
+end
+
+function loading(value)
+	--Reinit
+	term.setCursorPos(1, 11)
+	term.clearLine()
+	nass.centerPrint(" "..value.." %")
+end
+
+--Programm
+term.setBackgroundColor(colors.black)
+sleep(0.1)
+term.clear()
+term.setBackgroundColor(colors.gray)
+sleep(0.1)
+term.clear()
+term.setBackgroundColor(colors.lightGray)
+sleep(0.1)
+term.clear()
+term.setBackgroundColor(colors.white)
+sleep(0.1)
+term.clear()
+sleep(0.1)
+paintComponent()
+
+if tArgs[1] == "Update" then
+	term.clear()
+	term.setCursorPos(1, 8)
+	nass.centerPrint("NassOS")
+	term.setTextColor(colors.lightBlue)
+	nass.centerPrint("Downloading Files...")
+	term.setTextColor(colors.blue)
+	print()
+	loading(0.00)
+	nass.download(site.."NassOS/blueScreen", "NassOS/blueScreen")
+	loading(14.24)
+	nass.download(site.."NassOS/shutdown", "NassOS/shutdown")
+	loading(28.35)
+	nass.download(site.."startup", "startup")
+	nass.download(site.."NassOS/bios", "NassOS/bios")
+	loading(56.73)
+	nass.download(site.."NassOS/reboot", "NassOS/reboot")
+	loading(70.75)
+	nass.download(site.."NassOS/desktop", "NassOS/desktop")
+	loading(84.07)
+	nass.download(site.."NassOS/nassLogon", "NassOS/nassLogon")
+	loading(96.48)
+	nass.download(site.."NassOS/sleep", "NassOS/sleep")
+	nass.download(site.."NassOS/version", "NassOS/version")
+	loading(100.00)
+	
+	if not fs.exists("Documents") then
+		fs.makeDir("Documents")
+	end
+	
+	term.clear()
+	term.setCursorPos(1, 8)
+	nass.centerPrint("NassOS")
+	term.setTextColor(colors.lightBlue)
+	nass.centerPrint("Downloading Applications...")
+	term.setTextColor(colors.blue)
+	print()
+	loading(0.00)
+	nass.download(site.."NassOS/pictureViewer", "NassOS/pictureViewer")
+	loading(15.72)
+	nass.download(site.."NassOS/kadRestore", "NassOS/kadRestore")
+	loading(30.46)
+	nass.download(site.."NassOS/explorer", "NassOS/explorer")
+	nass.download(site.."NassOS/controlPanel", "NassOS/controlPanel")
+	loading(64.12)
+	nass.download(site.."NassOS/LuaIDE", "NassOS/LuaIDE")
+	loading(82.08)
+	nass.download(site.."NassOS/chater", "NassOS/chater")
+	loading(100.00)
+	
+	term.clear()
+	term.setCursorPos(1, 8)
+	nass.centerPrint("NassOS")
+	term.setTextColor(colors.lightBlue)
+	nass.centerPrint("Rebooting...")
+	term.setTextColor(colors.blue)
+	sleep(1)
+	os.reboot()
+else
+	term.clear()
+	term.setCursorPos(1, 8)
+	nass.centerSlowPrint("NassOS")
+	term.setTextColor(colors.lightBlue)
+	nass.centerPrint("Loading NassOS...")
+	term.setTextColor(colors.blue)
+	print()
+	term.setBackgroundColor(colors.lightBlue)
+	nass.centerSlowPrint("                                ", 10)
+	sleep(1)
+	shell.run("NassOS/nassLogon")
+end

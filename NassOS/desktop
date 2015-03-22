@@ -1,0 +1,83 @@
+--Variables
+local backgroundColor = colors.lightBlue
+local textColor = colors.black
+local xSize, ySize = term.getSize()
+
+--Load NassAPI
+os.loadAPI("NassOS/nass")
+
+local function paintComponent()
+	term.setBackgroundColor(backgroundColor)
+	term.setTextColor(textColor)
+	term.clear()
+	
+	term.setCursorPos(1, 1)
+	term.setBackgroundColor(colors.gray)
+	term.setTextColor(colors.white)
+	term.clearLine()
+	if os.getComputerLabel() ~= nil and string.len(os.getComputerLabel()) < 16 then
+		write(os.getComputerLabel())
+	else
+		write("User "..os.getComputerID())
+	end
+	nass.centerPrint("NassOS")
+	
+	--BOUTONS
+	term.setCursorPos(2, 3)
+	nass.resetBtnPos()
+	BTN_CONTROL_PANEL = nass.addBtn("Panneau de Configuration", nass.layout.flow, btnColor)
+	BTN_IDE = nass.addBtn("Lua IDE", nass.layout.flow, btnColor)
+	BTN_CHAT = nass.addBtn("Chat", nass.layout.flow, btnColor)
+	BTN_SHELL = nass.addBtn("CMD", nass.layout.flow, btnColor)
+	BTN_EXPLORER = nass.addBtn("Explorateur", nass.layout.flow, btnColor)
+	BTN_SLEEP = nass.addBtn("Mettre en veille", nass.layout.flow, btnColor)
+	BTN_REBOOT = nass.addBtn("Redemmarrer", nass.layout.flow, btnColor)
+	BTN_SHUTDOWN = nass.addBtn("Arreter", nass.layout.flow, btnColor)
+end
+
+local function listener()
+	while true do
+		_, button, xPos, yPos = os.pullEvent("mouse_click")
+		
+		if button == 1 then
+			if nass.isAera(xPos, yPos, BTN_CONTROL_PANEL) then
+				shell.run("NassOS/controlPanel")
+				paintComponent()
+			end
+			if nass.isAera(xPos, yPos, BTN_EXPLORER) then
+				shell.run("NassOS/explorer")
+				paintComponent()
+			end
+			if nass.isAera(xPos, yPos, BTN_IDE) then
+				shell.run("NassOS/LuaIDE")
+				paintComponent()
+			end
+			if nass.isAera(xPos, yPos, BTN_CHAT) then
+				shell.run("NassOS/chater")
+				paintComponent()
+			end
+			if nass.isAera(xPos, yPos, BTN_SHELL) then
+				term.setBackgroundColor(colors.black)
+				term.setTextColor(colors.white)
+				shell.run("clear")
+				nass.centerPrint("Tapez \"exit\" pour revenir au bureau.")
+				shell.run("shell")
+				paintComponent()
+			end
+			if nass.isAera(xPos, yPos, BTN_SLEEP) then
+				shell.run("NassOS/sleep")
+				paintComponent()
+			end
+			if nass.isAera(xPos, yPos, BTN_REBOOT) then
+				shell.run("NassOS/reboot")
+			end
+			if nass.isAera(xPos, yPos, BTN_SHUTDOWN) then
+				shell.run("NassOS/shutdown")
+			end
+		end
+	end
+end
+	
+--Programm
+paintComponent()
+listener()
