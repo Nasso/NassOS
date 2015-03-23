@@ -29,7 +29,7 @@ function isUpdateAvailable()
 	end
 	
 	--Determining the last version
-	download("https://raw.githubusercontent.com/Nasso/NassOS/master/NassOS/NassOS/version", "last-version")
+	download("https://raw.githubusercontent.com/Nasso/NassOS/master/NassOS/version", "last-version")
 	lastVersionFile = fs.open("last-version", "r")
 	lastVersion = lastVersionFile.readAll()
 	lastVersionFile.close()
