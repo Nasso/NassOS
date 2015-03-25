@@ -30,9 +30,26 @@ local function paintComponent()
 	BTN_CHAT = nass.addBtn("Chat", nass.layout.flow, btnColor)
 	BTN_SHELL = nass.addBtn("CMD", nass.layout.flow, btnColor)
 	BTN_EXPLORER = nass.addBtn("Explorateur", nass.layout.flow, btnColor)
-	BTN_SLEEP = nass.addBtn("Mettre en veille", nass.layout.flow, btnColor)
-	BTN_REBOOT = nass.addBtn("Redemmarrer", nass.layout.flow, btnColor)
-	BTN_SHUTDOWN = nass.addBtn("Arreter", nass.layout.flow, btnColor)
+	
+	
+	-- Les boutons de tension
+	-- arreter
+	term.setTextColor(colors.white)
+	term.setCursorPos(xSize-3,1)
+	term.setBackgroundColor(colors.red)
+	term.write(" u ")
+	--reboot
+	term.setCursorPos(xSize-7,1)
+	term.setBackgroundColor(colors.green)
+	term.write(" * ")
+	--sleep
+	term.setCursorPos(xSize-11,1)
+	term.setBackgroundColor(colors.orange)
+	term.write(" ~ ")
+	
+	--On remet tout sinon je vais me faire taper
+	term.setBackgroundColor(backgroundColor)
+	term.setTextColor(textColor)
 end
 
 local function listener()
@@ -64,20 +81,21 @@ local function listener()
 				shell.run("shell")
 				paintComponent()
 			end
-			if nass.isAera(xPos, yPos, BTN_SLEEP) then
-				shell.run("NassOS/sleep")
-				paintComponent()
+			
+			if nass.isAera(xPos,yPos,{xSize-3,1,xSize-1,1}) then
+				shell.run("NassOS/shutdown")
 			end
-			if nass.isAera(xPos, yPos, BTN_REBOOT) then
+			if nass.isAera(xPos,yPos,{xSize-7,1,xSize-5,1}) then
 				shell.run("NassOS/reboot")
 			end
-			if nass.isAera(xPos, yPos, BTN_SHUTDOWN) then
-				shell.run("NassOS/shutdown")
+			if nass.isAera(xPos,yPos,{xSize-11,1,xSize-9,1}) then
+				shell.run("NassOS/sleep")
+				paintComponent()
 			end
 		end
 	end
 end
-	
+
 --Programm
 paintComponent()
 listener()
