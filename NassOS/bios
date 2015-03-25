@@ -212,7 +212,7 @@ function listener()
 				if confirm() then
 					term.clear()
 					loadingScreen("DOWNLOADING INSTALLER")
-					download("https://raw.githubusercontent.com/Nasso/NassOS/master/NassOS/NassOS/startup", "startup")
+					download("https://raw.githubusercontent.com/Nasso/NassOS/master/startup", "startup")
 					sleep(3)
 					loadingScreen("DOWNLOADING INSTALLER")
 					sleep(1)
